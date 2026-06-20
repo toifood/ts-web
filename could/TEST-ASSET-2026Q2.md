@@ -10,6 +10,12 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->## ASSET:test 2026-06-14 08:29 → Utility functions and hooks are structured for easy unit testing
+## ASSET:test 2026-06-20 19:23 → Analysis only — no files changed
+
+Zero test coverage confirmed, three priority test targets identified (see corresponding ISSUE entry). No test files were created in this run. To set up:
+- `frontend/`: add Vitest to `devDependencies`, add `"test": "vitest"` script to `package.json`
+- `og-worker/`: add a `test/wrapTitle.test.js` file (no extra dependencies needed for pure function tests)
+- Pages Function: can be tested with a Vitest environment or a plain Node test runner against the exported `onRequest` function with a mocked `context`
 ## ASSET:test 2026-06-15 20:02 → Add Vitest unit tests for utilities and hooks + Playwright E2E for SharedRecipe golden path
 
 Step 1 — Install Vitest in frontend/package.json devDependencies:

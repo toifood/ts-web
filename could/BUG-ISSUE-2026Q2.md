@@ -10,6 +10,16 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->## ISSUE:bug 2026-06-14 08:29 → `wrapTitle` in OG worker silently drops trailing words when a title fills both lines exactly
+## ISSUE:bug 2026-06-24 09:00 → Three runtime bugs in SharedRecipe and og-worker need fixing
+
+**1. SharedRecipe.jsx — fetch calls have no AbortController (lines 212–244)**
+The recipe fetch and the subsequent author-profile fetch both run without an `AbortController`. If the user navigates away before either resolves, `setRecipe`, `setAuthor`, `setFullProfile`, `setLoading`, and `setError` are called on an unmounted component. React 18 silences the warning but the state update still runs, can interfere on remount, and wastes network bandwidth.
+
+**2. SharedRecipe.jsx — `isPremium` badge flashes FREE → PREMIUM on load (line 296)**
+`fullProfile` starts as `null`, so `authorRole` falls back to `author?.role`. If `author.role` is `'free'` but the profile endpoint returns a paid role, the badge visibly flips from FREE to PREMIUM during the second render. This is a UX regression visible on every shared-recipe page load for premium users.
+
+**3. og-worker/src/index.js — Twemoji CDN failure produces a blank emoji in the OG image**
+When the `cdnjs.cloudflare.com` PNG fetch fails or times out, the fallback is an SVG `<text>` element with a font emoji. `@resvg/resvg-wasm` renders SVG without a bundled emoji font, so the fallback renders as an empty glyph — the OG image shows no emoji at all. The WASM init (`wasmInitPromise`) is also awaited *after* all async work is complete, meaning cold-start concurrent requests each burn two round-trips before hitting a potential init failure.
 ## ISSUE:bug 2026-06-23 22:01 → Three confirmed bugs: dead utility function, broken emoji OG fallback, and inconsistent Twitter meta attribute rewrite
 
 **1. `formatMemberSince` is dead code** (`frontend/src/pages/SharedRecipe.jsx:136`)

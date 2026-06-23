@@ -10,6 +10,19 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->## ISSUE:bug 2026-06-14 08:29 → `wrapTitle` in OG worker silently drops trailing words when a title fills both lines exactly
+## ISSUE:web 2026-06-23 21:00 → Four bugs — timer no-reset, OG tag regex fragility, window.location in render, og-worker twemoji CDN age
+
+**Bug 1 — Timer cannot be restarted after reaching zero** (`frontend/src/pages/SharedRecipe.jsx` ~L441-451)
+When `timeLeft` reaches 0, `setTimerActive(false)` is called but `timeLeft` stays at 0. The play button reappears but clicking it starts an interval that immediately fires `setTimerActive(false)` again. No reset mechanism exists — the timer is permanently broken after one full countdown.
+
+**Bug 2 — Fragile OG tag regex in Pages Function** (`frontend/functions/recipe/[token].js` ~L35)
+`html.replace(/<meta property="og:image"[^>]*/` strips everything from the opening tag up to the last char before `>`, then appends `/`. This works only if `index.html` contains exactly one such tag with no nested quotes. Any change to the base HTML structure will silently corrupt the injected tag.
+
+**Bug 3 — `window.location` read during render** (`frontend/src/pages/FAQ.jsx` L1059)
+`const deepLink = window.location.origin + '/faq#' + id;` is computed in the function body of `FAQItem` on every render. While this works in the current browser-only SPA, it will throw if any SSR or prerendering is ever added.
+
+**Bug 4 — Twemoji CDN URL pinned to 14.0.2** (`og-worker/src/index.js` ~L55)
+The OG worker fetches emoji PNGs from `cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/`. Newer emoji codepoints (Unicode 15+) added to the app will produce 404 responses, silently falling back to SVG text rendering which may render as empty boxes in rsvg.
 ## ISSUE:bug 2026-06-20 19:23 → Three live bugs: og:image URL regression, 2× dimension mismatch, and wrapTitle word-drop still unfixed
 
 **Bug 1 (HIGH) — og:image URL regression** `frontend/functions/recipe/[token].js`

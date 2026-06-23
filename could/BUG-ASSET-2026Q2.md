@@ -10,6 +10,16 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->## ASSET:bug 2026-06-14 08:29 → Pages Function OG meta regex correctly exploits tag structure to avoid double-closing
+## ASSET:bug 2026-06-24 09:00 → Timer cleanup and OG edge caching are implemented correctly
+
+**Timer interval cleanup is safe**
+`useEffect` in `SharedRecipe.jsx` (lines 246–256) returns a cleanup that calls `clearInterval(timerRef.current)` on every dependency change — `timerActive` and `timeLeft` — so the interval is always torn down before a new one is started. There is no interval accumulation or leak across re-renders.
+
+**OG worker uses Cloudflare fetch cache correctly**
+The `fetch` to `https://api.toifood.co.nz/recipes/public/${token}` passes `cf: { cacheTtl: 300 }`, instructing the Cloudflare edge to cache the upstream recipe response for 5 minutes. Combined with the `Cache-Control: public, max-age=86400` header on the rendered PNG response, repeated social-preview requests for the same recipe token are served from edge cache with no origin hit — good for cost and latency.
+
+**`escapeXml` in og-worker prevents SVG injection**
+All dynamic strings (recipe title, emoji fallback) pass through `escapeXml` before being interpolated into the SVG template, correctly neutralising `&`, `<`, `>`, and `"` characters that would otherwise break the SVG or introduce content injection.
 ## ASSET:bug 2026-06-23 22:01 → Defensive patterns inventory — all external calls have timeouts, XSS guards, and graceful fallbacks
 
 **Fetch safety** (`og-worker/src/index.js:50–65, 67–78`)

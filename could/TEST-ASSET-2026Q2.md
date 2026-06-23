@@ -10,6 +10,19 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->## ASSET:test 2026-06-14 08:29 → Utility functions and hooks are structured for easy unit testing
+## ASSET:test 2026-06-24 09:00 → Codebase structure is highly amenable to testing with minimal setup
+
+**Pure utility functions are ready to unit-test today**
+`resolveNote`, `resolveDietaryAllergyNote`, `resolveDietaryInfoNote` (in `announcementNote.js`) and `wrapTitle`, `escapeXml`, `emojiCodepoint` (in `og-worker/src/index.js`) take plain inputs and return plain outputs with no DOM or network dependency. A single Vitest config would cover all of them without mocks.
+
+**Single API base URL makes fetch mocking straightforward**
+`SharedRecipe.jsx` calls only one base URL (`https://api.toifood.co.nz`) for both recipe and profile endpoints. `vi.stubGlobal('fetch', ...)` or `msw` with a single handler intercepts the entire data layer — no complex dependency injection needed.
+
+**`useReveal` hook is independently testable**
+The hook takes a threshold, sets up an `IntersectionObserver`, and returns `[ref, visible]`. Because it has no coupling to application state, it can be tested standalone with a mock `IntersectionObserver` in a few lines.
+
+**Component tree is shallow and co-located**
+All pages import from a flat `components/` and `hooks/` layer with no circular dependencies or global stores. React Testing Library + Vitest can be added to `frontend/` with one dev-dependency block and no build changes beyond `vite.config.js` adding a `test` key.
 ## ASSET:test 2026-06-23 22:01 → Testable pure-function surface is large and dependency-free — high ROI for a first test pass
 
 **Immediately unit-testable (no DOM, no network, no Cloudflare env):**

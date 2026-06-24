@@ -10,6 +10,13 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->## ASSET:test 2026-06-14 08:29 → Utility functions and hooks are structured for easy unit testing
+## ASSET:test 2026-06-24 19:10 → FAQ and AnnouncementNote are fully testable without network or timers
+
+**`FAQ.jsx` is synchronous and router-mockable**
+The entire FAQ page renders from the static `FAQS` array and `CATEGORIES` constant — no `useEffect`, no API calls, no async data. Wrapping `<FAQ />` in `<MemoryRouter initialEntries={['/faq#premium']}>` gives full control over hash-based deep linking. All interactive behaviour (accordion expand/collapse, category pill smooth-scroll, deep-link auto-open and scroll) is exercisable with `userEvent.click` and `waitFor` with no network mocks. The `window.location.origin` read in `FAQItem` is the only environment dependency; a `vi.stubGlobal` on `window.location` handles it in one line.
+
+**`AnnouncementNote.jsx` state surface is minimal**
+The component manages exactly one boolean (`modalVisible`). All visual variation is driven by the `TYPE_STYLES` lookup on `config.type`. A test matrix of six type values × [card rendered, modal opened, modal closed] covers the full component surface in under 20 assertions. The `if (!config || !config.text) return null` guard is a single `expect(container).toBeEmptyDOMElement()` call. Because the component has no side effects and no timers, tests run synchronously and do not require `act` wrapping beyond the initial render.
 ## ASSET:test 2026-06-24 09:32 → Core logic is isolated in pure functions and a single hook, making test adoption low-friction
 
 `frontend/src/utils/announcementNote.js` exports three pure functions with no side effects and no DOM or network dependencies. Adding Vitest and writing unit tests for all branching paths (empty tags, mixed allergen/guideline tags, null text) would take under an hour and give high-confidence coverage of the allergy-warning path.

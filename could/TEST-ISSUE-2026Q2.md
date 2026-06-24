@@ -10,6 +10,18 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->## ISSUE:test 2026-06-14 08:29 → Zero tests across all packages; no testing framework installed
+## ISSUE:test 2026-06-24 19:10 → og-worker is not testable without Miniflare; `bufToBase64` chunked encoding and AnnouncementNote type-routing are unverified
+
+Two specific gaps not yet addressed in prior entries:
+
+**1. `og-worker` fetch handler requires Miniflare — no harness exists**
+`og-worker/src/index.js` uses `cf: { cacheTtl: 300 }` inside both `fetch()` calls. This is a Cloudflare-specific API extension; calling it in a standard Node test runner does not throw but the field is silently ignored, which is fine for unit purposes. However the full handler also calls `initWasm(resvgWasm)` with a WASM binary and uses `new Resvg(svg)` — both of which fail outside a Worker or WASM-capable Node environment. `og-worker/package.json` has no Miniflare dependency and no `wrangler.toml` `[env.test]` block. The four pure helpers (`wrapTitle`, `emojiCodepoint`, `escapeXml`, `bufToBase64`) can be extracted and tested in Node, but the end-to-end render path is entirely unexercised.
+
+**2. `bufToBase64` chunk-boundary correctness is untested**
+`bufToBase64` accumulates binary using `String.fromCharCode(...bytes.subarray(i, i + chunk))` with `chunk = 8192`, then calls `btoa`. The spread of a TypedArray subarray is safe up to ~125 000 elements before V8's argument limit is reached. For 72×72 Twemoji PNGs (typically 3–8 KB) this is fine. But there is no test asserting that the base64 output round-trips correctly through `atob`, and no boundary test at exactly `chunk` and `chunk + 1` byte inputs.
+
+**3. `AnnouncementNote` type-to-style routing is unverified**
+`AnnouncementNote.jsx` renders six distinct visual styles keyed by `config.type`. `useAnnouncementNoteManager` emits `type: 'warning'` for allergen notes and `type: 'headsup'` for dietary guidelines — but there is no test confirming the correct type flows through to the correct icon colour. A one-character key mismatch (e.g. `criticalAllergen` vs `critical_allergen`) in `DIETARY_INFO` would silently swap a red allergy warning for a teal informational note.
 ## ISSUE:test 2026-06-24 09:32 → Zero test infrastructure; complex branching logic and worker utilities are entirely unverified
 
 `frontend/package.json` lists no test framework (no Vitest, Jest, or Testing Library). There are no `.test.jsx`, `.spec.js`, or any other test files anywhere in the repository. As a result:

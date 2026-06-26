@@ -10,6 +10,18 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->## ISSUE:test 2026-06-14 08:29 → Zero tests across all packages; no testing framework installed
+## ISSUE:test 2026-06-27 10:55 → Zero test coverage — og-worker SVG logic and dietary note resolution fully unverified
+
+**Finding — No test infrastructure**
+Neither `frontend/` nor `og-worker/` contain test files or a test runner. `frontend/package.json` has no test script and no testing dependencies (no Vitest, Jest, or Testing Library). `og-worker/package.json` is equally bare. There is no CI pipeline in the repository.
+
+**Highest-risk untested units**
+
+`og-worker/src/index.js` — `wrapTitle(title, maxChars)` has a confirmed silent-truncation bug (words discarded at overflow) that a unit test covering titles longer than ~52 characters would catch immediately. `emojiCodepoint(emoji)` strips variation selectors (`fe0f`) but has no coverage for multi-codepoint sequences, ZWJ sequences, or regional flag pairs. `escapeXml` is exercised only implicitly.
+
+`frontend/src/utils/announcementNote.js` — `resolveDietaryAllergyNote` and `resolveDietaryInfoNote` branch on `criticalAllergen` vs `dietaryGuideline` fields in `dietaryInfo`. Adding a new dietary tag that lacks one of these fields silently produces no note — no error, no fallback, no observable failure during development.
+
+`frontend/src/hooks/useReveal.js` — `IntersectionObserver` is used without a polyfill check. No test guards against environments where the API is unavailable (older Safari, SSR contexts).
 ## ISSUE:test 2026-06-24 19:10 → og-worker is not testable without Miniflare; `bufToBase64` chunked encoding and AnnouncementNote type-routing are unverified
 
 Two specific gaps not yet addressed in prior entries:

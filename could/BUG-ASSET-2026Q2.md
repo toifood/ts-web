@@ -10,6 +10,18 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->## ASSET:bug 2026-06-14 08:29 → Pages Function OG meta regex correctly exploits tag structure to avoid double-closing
+## ASSET:bug 2026-06-27 10:55 → Bug audit of ts-toifood-web (frontend + og-worker)
+
+Three concrete bugs identified across the web layer.
+
+**Timer reset (`frontend/src/pages/SharedRecipe.jsx`)**
+`timeLeft` is initialised from `recipe.cookTime * 60` on data load but never re-initialised when the countdown expires. After expiry the play button is a no-op until page reload. Fix: when `timeLeft === 0` and the user presses play again, reset `timeLeft` to `recipe.cookTime * 60` before setting `timerActive = true`.
+
+**Silent title truncation (`og-worker/src/index.js`)**
+`wrapTitle` drops words beyond 2 lines with no ellipsis. Fix: after the loop, if the original title had more words than were consumed, append `…` to `lines[lines.length - 1]`.
+
+**Cache TTL mismatch (`og-worker/src/index.js`)**
+Upstream recipe cache is 300 s; downstream OG image `max-age` is 86400 s — a 288x gap. Fix: lower `max-age` to ~600 s, or derive a cache key from the recipe update timestamp to allow targeted invalidation.
 ## ASSET:bug 2026-06-24 19:10 → Injection guards and cross-browser icon loading are correctly implemented throughout
 
 **`escapeHtml` applied to all injected values** (`frontend/functions/recipe/[token].js`)

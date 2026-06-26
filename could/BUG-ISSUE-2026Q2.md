@@ -10,6 +10,16 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->## ISSUE:bug 2026-06-14 08:29 → `wrapTitle` in OG worker silently drops trailing words when a title fills both lines exactly
+## ISSUE:bug 2026-06-27 10:55 → Timer cannot restart after countdown + og-worker silently truncates long recipe titles
+
+**Finding — `frontend/src/pages/SharedRecipe.jsx`**
+The cooking timer cannot be restarted once the countdown reaches zero. When `timeLeft` hits 0, `setTimerActive(false)` fires but `timeLeft` is never reset to `recipe.cookTime * 60`. Re-pressing the play button sets `timerActive = true`, but the `useEffect` guard `timerActive && timeLeft > 0` immediately evaluates false — the interval never starts. Users must reload the page to reuse the timer.
+
+**Finding — `og-worker/src/index.js` (`wrapTitle`)**
+`wrapTitle(title, maxChars = 26)` silently drops words that overflow two lines. When the second line is full and more words remain, `current = ''` is set and the loop breaks — surplus words are discarded with no ellipsis appended. A title such as "Slow-Cooked Moroccan Lamb Shoulder with Apricots" renders visibly truncated on OG images with no indication text was cut.
+
+**Finding — `og-worker/src/index.js` (cache mismatch)**
+The Worker fetches recipe data with `cf: { cacheTtl: 300 }` (5 min) but returns the generated PNG with `Cache-Control: public, max-age=86400` (24 hr). If a recipe title is updated, the OG image can remain stale in CDN/browser caches for up to 24 hours while the API reflects the change within 5 minutes.
 ## ISSUE:bug 2026-06-24 19:10 → og:image regex regressed from `[^>]*` to `[^]*`, destroying HTML from that tag to end-of-file
 
 `frontend/functions/recipe/[token].js` line:

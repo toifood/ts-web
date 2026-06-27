@@ -10,6 +10,16 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->## ASSET:test 2026-06-14 08:29 → Utility functions and hooks are structured for easy unit testing
+## ASSET:test 2026-06-28 06:36 → All critical paths are pure functions — ideal unit-test surface with no mocking complexity
+
+**`frontend/src/utils/announcementNote.js`**
+All three exports (`resolveNote`, `resolveDietaryAllergyNote`, `resolveDietaryInfoNote`) are pure functions: no side effects, no async, no DOM, no React. They take plain JS primitives and return plain objects or null. Vitest can be added to the project in a single `package.json` change and these functions tested with zero setup beyond import.
+
+**`og-worker/src/index.js` — `wrapTitle` and `emojiCodepoint`**
+`wrapTitle` and `emojiCodepoint` are both pure string utilities at module scope. A vitest or plain Node test suite can import and exercise them directly — no Cloudflare Worker runtime, no WASM, no network required. A property-based test over random ASCII titles would have caught the word-drop case (`lines.length === 2` mid-word) on first run.
+
+**`frontend/functions/recipe/[token].js`**
+The `onRequest` function is a deterministic HTML transform. A test can pass a mock `context` with `params.token`, a mock `env.ASSETS.fetch` that returns a known HTML string, and a mock `fetch` for the recipe API. The entire meta-tag injection logic — including the `og:image` regex, the twitter attribute replacements, and the dimension tag injection — can be exercised in isolation from any Cloudflare runtime. The `escapeHtml` function is also independently testable and covers a security-critical code path.
 ## ASSET:test 2026-06-27 10:55 → Test coverage state for ts-toifood-web
 
 Both packages (`frontend/`, `og-worker/`) have zero test files and no test runner configured. Current coverage is 0%.

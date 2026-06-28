@@ -10,4 +10,8 @@ ADD NEW ENTRIES AT THE TOP FOR NEW TOPICS; UPDATE IN PLACE FOR EXISTING ONES.
 
 FORMAT: ## ISSUE:{NAME} {YYYY-MM-DD HH:MM} → {CONTENT}
 
-####### <!-- ANCHOR MARKER - ADD OR UPDATE ENTRIES DIRECTLY BELOW THIS LINE -->
+####### <!-- ANCHOR MARKER - ADD OR UPDATE ENTRIES DIRECTLY BELOW THIS LINE -->## ISSUE:USAGE 2026-06-28 13:12 ▸ Usage limits absent from Terms; public API endpoint has no client-side rate-limit handling
+
+1. **Limits not contractually disclosed** — FAQ.jsx documents hourly generation limits (Free: 2 Claude + 3 Basic; Premium: 5 Claude + 10 Basic) but Terms.jsx is silent on usage limits. Users have no contractual notice that limits exist or can be changed.
+2. **Public endpoint silent on failure** — SharedRecipe.jsx calls `https://api.toifood.co.nz/recipes/public/${token}` and `/users/${userId}/profile` with no retry-after handling or quota feedback. Rate-limit errors from the backend collapse silently into the generic error state ("Recipe not found"), obscuring the real cause from users.
+3. **No quota visibility** — No web-facing usage dashboard or remaining-quota indicator exists for authenticated users on the marketing site.

@@ -10,6 +10,13 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->## ASSET:bug 2026-06-14 08:29 → Pages Function OG meta regex correctly exploits tag structure to avoid double-closing
+## ASSET:bug 2026-06-29 06:25 → wasmInitPromise pattern is race-condition-safe; AnnouncementNote null guard is doubly enforced
+
+**`og-worker/src/index.js` — WASM init is correctly structured**
+`initWasm(resvgWasm)` is called once at module scope before any request handler executes. Each request `await`s `wasmInitPromise` before constructing `Resvg`. On a warm Worker instance this resolves immediately; on a cold start it waits. This is the correct Cloudflare Workers WASM pattern — calling `initWasm` inside the handler would throw `"already initialized"` on the second request in the same isolate. The module-level promise also ensures concurrent cold-start requests both await the single initialisation rather than racing to double-initialise.
+
+**`frontend/src/components/AnnouncementNote.jsx` — null guard prevents crash**
+The component returns `null` early when `!config || !config.text`. Every call site passes the result of `useAnnouncementNoteManager`, which returns `null` for unresolved notes. This means callers like `{notes.descriptionNote && <AnnouncementNote config={notes.descriptionNote} />}` are doubly protected — the conditional render in `SharedRecipe.jsx` and the guard inside the component itself. There is no path where a missing or empty note causes a render crash.
 ## ASSET:bug 2026-06-28 06:36 → announcementNote.js now fully implemented; og:image regex correctly uses [^>]*
 
 **`frontend/src/utils/announcementNote.js` — critical crash resolved**
